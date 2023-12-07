@@ -101,7 +101,7 @@ def get_hwp_text(filename):
             i += 4 + rec_len
         text += section_text
         text += "\n"
-    text = re.sub('[^가-힣a-zA-Z0-9\s.,()-:]', '', text)
+    text = re.sub('[^가-힣a-zA-Z0-9\s.,()-:<>]', '', text)
     text = text.replace('\x0b', '')
     
     return text
