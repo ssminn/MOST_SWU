@@ -207,8 +207,8 @@ class SecondWindow(QWidget):
         self.file_open_counter = 0
 
          # 저장된 TfidfVectorizer 객체와 모델을 로드
-        self.tfidf_vect = joblib.load('C:/Users/selly/OneDrive/바탕 화면/전달해요/tfidf_vect.pkl')
-        self.model = joblib.load('C:/Users/selly/OneDrive/바탕 화면/전달해요/model.pkl')
+        self.tfidf_vect = joblib.load('C:경로/tfidf_vect.pkl')
+        self.model = joblib.load('C:경로/model.pkl')
         
         self.initUI()
         self.file_texts = []  # 파일 내용을 저장할 리스트1
