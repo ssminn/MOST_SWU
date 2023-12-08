@@ -12,6 +12,6 @@ AI를 활용한 문서 내 개인정보 관련 법률 명시 항목 누락 및 �
 
 ![KakaoTalk_20231208_040747128](https://github.com/7d0x3e9/MOST/assets/99129159/f038ba21-8efa-4ae1-9cf6-8b20e21d2efc)
 
-![KakaoTalk_20231208_040747128_01](https://github.com/7d0x3e9/MOST/assets/99129159/68d0f636-2dd7-46fd-86db-2091ec2e0557)
+![image3](https://github.com/7d0x3e9/MOST/assets/99129159/54897710-aa71-46ee-9d6d-604b50cf23c5)
 
 
