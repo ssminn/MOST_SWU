@@ -6,6 +6,7 @@
 <p></p>
 <h1>:computer:DocDoc</h1>
 <h3>Doctor of Document<h3>
+<p></p>
 AI를 활용한 문서 내 개인정보 관련 법률 명시 항목 누락 및 일치도 자동 검증 프로그램
 
 
