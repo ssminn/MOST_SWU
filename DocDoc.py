@@ -1,6 +1,6 @@
 import sys
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QTextEdit, QFileDialog, QLabel, QHBoxLayout, QDialog, QTableWidget, QTableWidgetItem, QStackedWidget, QMessageBox
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QTextEdit, QFileDialog, QLabel, QHBoxLayout, QDialog, QTableWidget, QTableWidgetItem, QStackedWidget, QMessageBox, QApplication,QDesktopWidget
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QUrl
 import os
@@ -19,8 +19,7 @@ from xml.etree.ElementTree import parse
 from pdfminer.high_level import extract_text
 import zipfile
 from konlpy.tag import Okt
-import difflib
-from difflib import SequenceMatcher
+
 
 def read_pptx(file_path):
     pres = Presentation(file_path)
@@ -101,7 +100,7 @@ def get_hwp_text(filename):
             i += 4 + rec_len
         text += section_text
         text += "\n"
-    text = re.sub('[^가-힣a-zA-Z0-9\s.,()-:<>]', '', text)
+    text = re.sub('[^가-힣a-zA-Z0-9\s.,()-:]', '', text)
     text = text.replace('\x0b', '')
     
     return text
@@ -121,13 +120,34 @@ def hwpx_to_txt(file_path):
         
         return text 
     
-def similar(a, b):
-    return SequenceMatcher(None, a, b).ratio()
+def jaccard_similarity_char_level(str1, str2):
+    # 문자열에서 공백과 특수 문자를 제거합니다.
+    str1 = re.sub(r"\W", "", str1)
+    str2 = re.sub(r"\W", "", str2)
+    
+    # 문자열을 문자 단위로 분리하여 집합으로 변환합니다.
+    set1 = set(str1)
+    set2 = set(str2)
+    
+    # 교집합의 크기를 계산합니다.
+    intersection = len(set1.intersection(set2))
+    
+    # 합집합의 크기를 계산합니다.
+    union = len(set1.union(set2))
+    
+    # 교집합이 없으면 유사도는 0입니다.
+    if union == 0:
+        return 0
+    
+    # 자카드 유사도를 계산합니다.
+    similarity = intersection / union
+    return similarity
 
 class MyApp(QWidget):
 
     def __init__(self):
         super().__init__()
+        
         self.secondWindow = SecondWindow(self)  # SecondWindow 객체 생성
         self.initUI()
 
@@ -164,7 +184,15 @@ class MyApp(QWidget):
         self.setWindowTitle('Doc Doc')
         self.setWindowIcon(QIcon('docdoc.png'))
         self.setGeometry(1000, 1000, 1000, 1000)
+        self.center()
         self.show()
+
+    def center(self):
+        # 창을 화면 가운데로 이동
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
 
     def openFile(self):
         fname = QFileDialog.getOpenFileName(self, '개인정보 처리방침을 업로드해주세요')
@@ -207,8 +235,8 @@ class SecondWindow(QWidget):
         self.file_open_counter = 0
 
          # 저장된 TfidfVectorizer 객체와 모델을 로드
-        self.tfidf_vect = joblib.load('C:경로/tfidf_vect.pkl')
-        self.model = joblib.load('C:경로/model.pkl')
+        self.tfidf_vect = joblib.load('C:/Users/csm74/OneDrive/문서/카카오톡 받은 파일/굿/tfidf_vect.pkl')
+        self.model = joblib.load('C:/Users/csm74/OneDrive/문서/카카오톡 받은 파일/굿/model.pkl')
         
         self.initUI()
         self.file_texts = []  # 파일 내용을 저장할 리스트1
@@ -408,10 +436,11 @@ class SecondWindow(QWidget):
 
     def predict_topic(self, text): 
         sentences = text.split('\n')  
-        self.pass_sentences = ["<개인정보 제공 및 이용 동의서> ", "1. 개인정보 수집 및 이용 목적", "2. 개인정보 수집 항목", "3. 개인정보의 보유 및 이용 기간", "4. 동의 거부 및 동의 거부 시 불이익 내용","2) 정보 제공"," <개인정보 제공 및 이용 동의서> ","<개인정보 제공 및 이용 동의서> "]
-        self.pass_words = ["다음과", "(서명)", "같이"]
-        self.two_words = ["전공", "세부전공", "이메일", "제목", "연령", "관심분야", "장애여부,", "보훈여부,", "학력사항", "경력사항", "소속명", "일반전화번호", "아이디", "비밀번호", "필수 :", "선택 :","필수:","공개여부","휴대전화번호", "필수", "선택"] 
-        self.three_words = ["10년동안","회신일로부터","12개월까지","보유기간은","보관됩니다."]
+        self.pass_sentences = ["<개인정보 제공 및 이용 동의서> ", "<개인정보 수집 및 이용 동의서> ", "1. 개인정보 수집 및 이용 목적", "2. 개인정보 수집 항목", "3. 개인정보의 보유 및 이용 기간", "4. 동의 거부 및 동의 거부 시 불이익 내용","2) 정보 제공"," <개인정보 제공 및 이용 동의서> ","<개인정보 제공 및 이용 동의서> ","개인정보 제공 및 이용 동의서 "]
+        self.pass_words = ["다음과", "(서명)", "같이", "1.0"]
+        self.one_words = ["환불", "기업", "가입형", "표준성과한마당,", "자동입력", "수수료", "정보제공", "회원가입", "해결", "채용성공수수료"]
+        self.two_words = ["닉네임", "전공", "세부전공", "이메일", "제목", "연령", "관심분야", "장애여부,", "보훈여부,", "학력사항", "경력사항", "소속명", "일반전화번호", "아이디", "비밀번호", "필수 :", "선택 :","필수:","공개여부","휴대전화번호", "필수", "선택"] 
+        self.three_words = ["10년동안","회신일로부터","12개월까지","보유기간은","보관됩니다.", "폐기", "법률에"]
         predictions = []
 
         # 문장 토큰화 함수 정의
@@ -424,13 +453,16 @@ class SecondWindow(QWidget):
             pass_tokens = [sentence_tokenize(pass_sentence) for pass_sentence in self.pass_sentences]
             pass_flag1 = any(word in sentence_tokens for word in self.pass_words)
             pass_flag2 = any(sentence_tokens == pass_sentence for pass_sentence in pass_tokens)
+            one_flag = any(word in sentence_tokens for word in self.one_words)
             two_flag = any(word in sentence_tokens for word in self.two_words)
             three_flag = any(word in sentence_tokens for word in self.three_words)
 
             if pass_flag1:
                 predictions.append((sentence.strip(), 'pass'))
             elif three_flag:
-                predictions.append((sentence.strip(), '3.0'))    
+                predictions.append((sentence.strip(), '3.0'))   
+            elif one_flag:
+                predictions.append((sentence.strip(), '1.0'))  
             elif pass_flag2:
                 predictions.append((sentence.strip(), 'pass'))
             elif two_flag:
@@ -477,9 +509,9 @@ class SecondWindow(QWidget):
             self.bottom_text = QLabel()
             self.bottom_text.setText(
             "<html>개인정보 보호법 (제 15조 2항)<br>"
-            "1. 개인정보의 수집ㆍ이용 목적<br>"
             "② 개인정보처리자는 제1항제1호에 따른 동의를 받을 때에는 다음 각 호의 사항을 정보주체에게 알려야 한다.<br>" 
             "다음 각 호의 어느 하나의 사항을 변경하는 경우에도 이를 알리고 동의를 받아야 한다.<br>"
+            "1. 개인정보의 수집ㆍ이용 목적<br>"
             "2. 수집하려는 개인정보의 항목<br>"
             "3. 개인정보의 보유 및 이용 기간<br>"
             "4. 동의를 거부할 권리가 있다는 사실 및 동의 거부에 따른 불이익이 있는 경우에는 그 불이익의 내용<br>"
@@ -570,7 +602,7 @@ class SecondWindow(QWidget):
                     for matching_sentence in [matching_sentence_1_0, matching_sentence_3_0]:
                         if matching_sentence is not None:
                             for i, policy_sentence in enumerate(policy_sentences):
-                                if similar(matching_sentence, policy_sentence.strip()) >= 0.5:
+                                if jaccard_similarity_char_level(matching_sentence, policy_sentence.strip()) >= 0.5:
                                     start_index = max(0, i - 5)
                                     end_index = min(len(policy_sentences), i + 5)
                                     context_sentences = policy_sentences[start_index:end_index]
@@ -601,29 +633,37 @@ class SecondWindow(QWidget):
                     document_target_sentences.append(sentence.strip())
                 if "3.0" in sentence:
                     document_target_sentences.append(sentence.strip())
+            
 
-
-    # policy_text에서 유사한 문장을 찾습니다.
             policy_sentences = policy_text.split('\n')
             similar_sentences = {}
             for document_sentence in document_target_sentences:
                 for policy_sentence in policy_sentences:
-                    similarity = difflib.SequenceMatcher(None, document_sentence, policy_sentence).ratio()
-                    if similarity > 0.63:  
+                    similarity = jaccard_similarity_char_level(document_sentence, policy_sentence)
+                    if similarity > 0.4564:  # 유사도 임계값 조정 가능
                         if document_sentence not in similar_sentences:
                             similar_sentences[document_sentence] = []
                         similar_sentences[document_sentence].append((policy_sentence, similarity))
 
-    # 유사한 문장과 그 유사도를 출력합니다.
+# 유사한 문장과 그 유사도를 출력합니다.
             message = "<br/>"
             for document_sentence, similar_sentence_info in similar_sentences.items():
                 message += f"<font color='#000000'>동의서 문장:<br/> {document_sentence}</font><br/>"
                 for info in similar_sentence_info:
                     similarity_percentage = round(info[1] * 100, 2)
-                    similarity_text = f"유사도: {similarity_percentage}%"
 
-                    # 빨간색 배경색을 추가한 부분
-                    similarity_text_with_background = f"<font style='background-color: #F5A9A9'>{similarity_text}</font>"
+                    if similarity_percentage <= 50:
+                        background_color = "#ED9595"
+                        label = "(위험)"
+                    elif 50 < similarity_percentage <= 80:
+                        background_color = "#FFE08C"
+                        label = "(경고)"
+                    else:
+                        background_color = "#CEF279"
+                        label = "(안전)"
+
+                    similarity_text = f"유사도: {similarity_percentage}% {label}"
+                    similarity_text_with_background = f"<font style='background-color: {background_color}'>{similarity_text}</font>"
 
                     message += f"<font color='#013ADF'>개인정보처리방침 문장: <br/>{info[0]}<br/> <font color='#000000'>{similarity_text_with_background}<br/>"
                 message += "<br/>"
@@ -632,6 +672,10 @@ class SecondWindow(QWidget):
             msg.setWindowTitle("유사 문장 비교 결과")
             msg.setText(message)
             msg.exec_()
+
+
+
+
             
         def goBack(self):
             self.te_policy.hide()
